@@ -1,0 +1,142 @@
+BASE=$HOME
+export PYTHONPATH=$PYTHONPATH:${BASE}/git/scclv2/src
+EXP_ID="ar-dcgmm-parallel1"
+SAVE_DIR="${BASE}/exp-results/${EXP_ID}"
+DATA_DIR="${BASE}/custom_datasets/"
+AR_MOD="cl_replay.architecture.ar"
+# export INVOCATION="singularity exec --nv  ${BASE}/ubuntu24tf217.sif"
+export INVOCATION=""
+${INVOCATION} python3 -m cl_replay.architecture.ar.experiment.Experiment_AR \
+--exp_id                        "${EXP_ID}"                     \
+--log_level                     DEBUG                           \
+--random_seed                   42                              \
+--wandb_active                  no                              \
+--dataset_dir                   "${DATA_DIR}"                   \
+--dataset_name                  mnist                           \
+--dataset_load                  tfds                            \
+--renormalize01                 yes                             \
+--np_shuffle                    yes                             \
+--vis_batch                     no                              \
+--vis_gen                       no                              \
+--data_type                     32                              \
+--num_tasks                     2                               \
+--DAll                          0 4 6 9                         \
+--T1                            0 4 6                           \
+--T2                            9                               \
+--epochs                        128                             \
+--batch_size                    100                             \
+--test_batch_size               100                             \
+--load_task                     0                               \
+--save_All                      yes                             \
+--train_method                  fit                             \
+--test_method                   eval                            \
+--full_eval                     yes                             \
+--single_class_test             no                              \
+--model_type                    ${AR_MOD}.model.DCGMM               \
+--callback_paths                ${AR_MOD}.callback                  \
+--train_callbacks               Set_Model_Params Early_Stop         \
+--global_callbacks              Log_Metrics Log_Protos              \
+--log_path                      "${SAVE_DIR}"                       \
+--vis_path                      "${SAVE_DIR}/protos"                \
+--ckpt_dir                      "${SAVE_DIR}"                       \
+--log_training                  no                                  \
+--save_protos                   on_train_end                        \
+--log_each_n_protos             32                                  \
+--ro_patience                   no                                  \
+--patience                      128                                 \
+--sampling_batch_size           100                                 \
+--samples_to_generate           1.                                  \
+--sampling_layer                -1                                  \
+--sample_variants               yes                                 \
+--sample_topdown                no                                  \
+--replay_proportions            50. 50.                             \
+--loss_coef                     off                                 \
+--loss_masking                  no                                  \
+--alpha_wrong                   1.                                  \
+--alpha_right                   .01                                 \
+--ro_layer_index                3                                   \
+--ro_patience                   -1                                  \
+--model_inputs                  0                               \
+--model_outputs                 8                               \
+--sampling_branch               8 7 6 4 3 0                     \
+--L0                        Input_Layer \
+--L0_layer_name             L0_INPUT    \
+--L0_shape                  28 28 1     \
+--L1                        ${AR_MOD}.layer.Folding_Layer \
+--L1_layer_name             L1_FOLD_CL                    \
+--L1_patch_width            8                             \
+--L1_patch_height           8                             \
+--L1_stride_x               2                             \
+--L1_stride_y               2                             \
+--L1_sharpening_iterations  0                             \
+--L1_sharpening_rate        0.0                           \
+--L1_input_layer            0                             \
+--L2                        ${AR_MOD}.layer.GMM_Layer \
+--L2_layer_name             L2_GMM_CL                 \
+--L2_K                      25                        \
+--L2_conv_mode              yes                       \
+--L2_sampling_divisor       10                        \
+--L2_sampling_I             -1                        \
+--L2_sampling_S             3                         \
+--L2_sampling_P             1.                        \
+--L2_somSigma_sampling      no                        \
+--L2_eps_0                  0.011                     \
+--L2_eps_inf                0.01                      \
+--L2_lambda_sigma           0.                        \
+--L2_lambda_pi              0.                        \
+--L2_reset_factor           0.1                       \
+--L2_gamma                  0.96                      \
+--L2_alpha                  0.01                      \
+--L2_loss_masking           no                        \
+--L2_input_layer            1                         \
+--L3                        ${AR_MOD}.layer.Folding_Layer \
+--L3_layer_name             L3_FOLD_SA                    \
+--L3_patch_width            28                            \
+--L3_patch_height           28                            \
+--L3_stride_x               1                             \
+--L3_stride_y               1                             \
+--L3_sharpening_iterations  0                             \
+--L3_sharpening_rate        0.0                           \
+--L3_input_layer            0                             \
+--L4                        ${AR_MOD}.layer.GMM_Layer \
+--L4_layer_name             L4_GMM_SA                 \
+--L4_K                      100                       \
+--L4_conv_mode              yes                       \
+--L4_sampling_divisor       10                        \
+--L4_sampling_I             -1                        \
+--L4_sampling_S             3                         \
+--L4_sampling_P             1.                        \
+--L4_somSigma_sampling      no                        \
+--L4_eps_0                  0.011                     \
+--L4_eps_inf                0.01                      \
+--L4_lambda_sigma           0.                        \
+--L4_lambda_pi              0.                        \
+--L4_reset_factor           0.1                       \
+--L4_gamma                  0.90                      \
+--L4_alpha                  0.01                      \
+--L4_loss_masking           no                        \
+--L4_wait_target            L2                        \
+--L4_wait_threshold         2.0                       \
+--L4_input_layer            3                         \
+--L5                        cl_replay.api.layer.keras.Reshape_Layer \
+--L5_layer_name             L5_RESHAPE_CL                           \
+--L5_target_shape           1 1 3025                                \
+--L5_input_layer            2                                       \
+--L6                        cl_replay.api.layer.keras.Reshape_Layer \
+--L6_layer_name             L6_RESHAPE_SA                           \
+--L6_target_shape           1 1 100                                 \
+--L6_input_layer            4                                       \
+--L7                        cl_replay.api.layer.keras.Concatenate_Layer \
+--L7_layer_name             L7_CONCAT                                   \
+--L7_input_layer            5 6                                         \
+--L8                        ${AR_MOD}.layer.Readout_Layer \
+--L8_layer_name             L8_READOUT                    \
+--L8_num_classes            10                            \
+--L8_loss_function          mean_squared_error            \
+--L8_lambda_b               0.                            \
+--L8_regEps                 0.05                          \
+--L8_loss_masking           no                            \
+--L8_reset                  no                            \
+--L8_wait_target            L2                            \
+--L8_wait_threshold         100.                          \
+--L8_input_layer            7

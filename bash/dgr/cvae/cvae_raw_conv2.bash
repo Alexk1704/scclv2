@@ -1,0 +1,174 @@
+BASE=$HOME
+export PYTHONPATH=$PYTHONPATH:${BASE}/git/scclv2/src
+EXP_ID="dgr-cvae-mnist"
+SAVE_DIR="${BASE}/exp-results/${EXP_ID}"
+DATA_DIR="${BASE}/custom_datasets/"
+AR_MOD="cl_replay.architecture.ar"
+LATENT_DIM=100
+DATA_DIM=784
+LABEL_DIM=10
+# export INVOCATION="singularity exec --nv  ${BASE}/ubuntu24tf217.sif"
+export INVOCATION=""
+${INVOCATION} python3 -m cl_replay.architecture.dgr.experiment.Experiment_DGR \
+--exp_id                        ${EXP_ID}                       \
+--log_level                     DEBUG                           \
+--random_seed                   42                              \
+--wandb_active                  no                              \
+--dataset_dir                   "${DATA_DIR}"                   \
+--dataset_name                  mnist                           \
+--dataset_load                  tfds                            \
+--vis_gen                       no                              \
+--renormalize01                 yes                             \
+--np_shuffle                    yes                             \
+--data_type                     32                              \
+--num_tasks                     6                               \
+--DAll                          0 1 2 3 4 5 6 7 8 9             \
+--T1                            0 1 2 3 4                       \
+--T2                            5                               \
+--T3                            6                               \
+--T4                            7                               \
+--T5                            8                               \
+--T6                            9                               \
+--num_classes                   10                              \
+--batch_size                    100                             \
+--sampling_batch_size           100                             \
+--save_All                      yes                             \
+--train_method                  fit                             \
+--test_method                   eval                            \
+--full_eval                     yes                             \
+--single_class_test             no                              \
+--model_type                    DGR-VAE                         \
+--callback_paths                ${AR_MOD}.callback              \
+--global_callbacks              Log_Metrics                     \
+--log_path                      "${SAVE_DIR}"                   \
+--vis_path                      "${SAVE_DIR}/vis"               \
+--ckpt_dir                      "${SAVE_DIR}"                   \
+--log_training                  no                              \
+--input_size                    28 28 1                         \
+--generator_type                VAE                             \
+--vae_epochs                    100                             \
+--solver_epochs                 50                              \
+--solver_epsilon                0.001                           \
+--replay_proportions            -1. -1.                         \
+--samples_to_generate           1.                              \
+--loss_coef                     off                             \
+--latent_dim                    ${LATENT_DIM}                   \
+--vae_beta                      1.                              \
+--enc_cond_input                yes                             \
+--dec_cond_input                yes                             \
+--drop_solver                   no                              \
+--drop_generator                no                              \
+--adam_epsilon                  0.001                           \
+--adam_beta1                    0.9                             \
+--adam_beta2                    0.999                           \
+--vae_epsilon                   0.0001                          \
+--E_model_inputs            0 1             \
+--E_model_outputs           7 8             \
+--E0                        Input_Layer \
+--E0_layer_name             E0_INPUT        \
+--E0_shape                  28 28 1         \
+--E1                        Input_Layer \
+--E1_layer_name             E1_INPUT        \
+--E1_shape                  ${LABEL_DIM}    \
+--E2                        cl_replay.api.layer.keras.Conv2D_Layer \
+--E2_layer_name             E2_CONV2D       \
+--E2_filters                32              \
+--E2_kernel_size            3 3             \
+--E2_strides                2 2             \
+--E2_activation             relu            \
+--E2_input_layer            0               \
+--E3                        cl_replay.api.layer.keras.Conv2D_Layer \
+--E3_layer_name             E3_CONV2D       \
+--E3_filters                64              \
+--E3_kernel_size            3 3             \
+--E3_strides                2 2             \
+--E3_activation             relu            \
+--E3_input_layer            2               \
+--E4                        cl_replay.api.layer.keras.Flatten_Layer \
+--E4_layer_name             E4_FLATTEN      \
+--E4_input_layer            3               \
+--E5                        cl_replay.api.layer.keras.Dense_Layer \
+--E5_layer_name             E5_DENSE        \
+--E5_units                  256             \
+--E5_activation             relu            \
+--E5_input_layer            4               \
+--E6                        cl_replay.api.layer.keras.Concatenate_Layer \
+--E6_layer_name             E6_CONCAT       \
+--E6_input_layer            5 1             \
+--E7                        cl_replay.api.layer.keras.Dense_Layer \
+--E7_layer_name             E7_MEAN         \
+--E7_units                  ${LATENT_DIM}   \
+--E7_activation             none            \
+--E7_input_layer            6               \
+--E8                        cl_replay.api.layer.keras.Dense_Layer \
+--E8_layer_name             E8_LOGVAR       \
+--E8_units                  ${LATENT_DIM}   \
+--E8_activation             none            \
+--E8_input_layer            6               \
+--D_model_inputs            0 1                 \
+--D_model_outputs           7                   \
+--D0                        Input_Layer \
+--D0_layer_name             D0_INPUT            \
+--D0_shape                  ${LATENT_DIM}       \
+--D1                        Input_Layer \
+--D1_layer_name             D1_INPUT            \
+--D1_shape                  ${LABEL_DIM}        \
+--D2                        cl_replay.api.layer.keras.Concatenate_Layer \
+--D2_layer_name             D2_CONCAT           \
+--D2_input_layer            0 1                 \
+--D3                        cl_replay.api.layer.keras.Dense_Layer \
+--D3_layer_name             D3_DENSE        \
+--D3_units                  256             \
+--D3_activation             relu            \
+--D3_input_layer            2               \
+--D4                        cl_replay.api.layer.keras.Dense_Layer \
+--D4_layer_name             D4_DENSE            \
+--D4_units                  3136                \
+--D4_activation             relu                \
+--D4_input_layer            3                   \
+--D5                        cl_replay.api.layer.keras.Reshape_Layer \
+--D5_layer_name             D5_RESHAPE          \
+--D5_target_shape           7 7 64              \
+--D5_input_layer            4                   \
+--D6                        cl_replay.api.layer.keras.Deconv2D_Layer \
+--D6_layer_name             D6_DECONV2D         \
+--D6_filters                32                  \
+--D6_kernel_size            3 3                 \
+--D6_strides                2 2                 \
+--D6_activation             relu                \
+--D6_input_layer            5                   \
+--D7                        cl_replay.api.layer.keras.Deconv2D_Layer \
+--D7_layer_name             D7_DECONV2D         \
+--D7_filters                1                   \
+--D7_kernel_size            3 3                 \
+--D7_strides                2 2                 \
+--D7_activation             none                \
+--D7_input_layer            6                   \
+--S_model_inputs            0                       \
+--S_model_outputs           5                       \
+--S0                        Input_Layer \
+--S0_layer_name             S0_INPUT                \
+--S0_shape                  28 28 1                 \
+--S1                        cl_replay.api.layer.keras.Flatten_Layer \
+--S1_layer_name             S1_FLATTEN              \
+--S1_input_layer            0                       \
+--S2                        cl_replay.api.layer.keras.Dense_Layer \
+--S2_layer_name             S2_DENSE                \
+--S2_units                  400                     \
+--S2_activation             relu                    \
+--S2_input_layer            1                       \
+--S3                        cl_replay.api.layer.keras.Dense_Layer \
+--S3_layer_name             S3_DENSE                \
+--S3_units                  400                     \
+--S3_activation             relu                    \
+--S3_input_layer            2                       \
+--S4                        cl_replay.api.layer.keras.Dense_Layer \
+--S4_layer_name             S4_DENSE                \
+--S4_units                  400                     \
+--S4_activation             relu                    \
+--S4_input_layer            3                       \
+--S5                        cl_replay.api.layer.keras.Dense_Layer \
+--S5_layer_name             S5_OUT                  \
+--S5_units                  ${LABEL_DIM}            \
+--S5_activation             softmax                 \
+--S5_input_layer            4

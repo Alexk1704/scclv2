@@ -1,0 +1,9 @@
+tensorflow==2.17.0
+tensorflow-datasets==4.9.6
+keras_cv==0.6.0
+quadprog~=0.1.12
+matplotlib==3.9.2
+pandas==2.2.3
+scipy==1.14.0
+imageio==2.35.1
+wandb==0.18.2
