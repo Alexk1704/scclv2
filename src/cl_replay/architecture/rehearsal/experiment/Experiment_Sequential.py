@@ -7,12 +7,12 @@ import tensorflow   as tf
 
 from importlib      import import_module
 from importlib.util import find_spec
+from matplotlib     import plt as plt
 
 from cl_replay.api.utils                        import log, helper
 from cl_replay.api.experiment                   import Experiment_Replay
 from cl_replay.api.model                        import DNN
 from cl_replay.api.parsing                      import Kwarg_Parser
-
 
 from cl_replay.architecture.rehearsal.adaptor   import Rehearsal_Adaptor
 from cl_replay.architecture.rehearsal.buffer    import Rehearsal_Buffer
@@ -88,19 +88,21 @@ class Experiment_Sequential(Experiment_Replay):
     
     
     def feed_sampler(self, task, current_data):
-            cur_xs, cur_ys = current_data
-            
-            self.sampler.add_subtask(xs=cur_xs, ys=cur_ys)
-            self.sampler.set_proportions([1.])
-            
-            if self.ml_paradigm == 'supervised':
-                _, self.class_freq = self.calc_class_freq(total_classes=self.DAll, targets=cur_ys, mode='ds')
-                self.adaptor.set_class_freq(class_freq = self.class_freq)
-            else: self.class_freq = None
-            
-            self.train_steps = self.get_task_iters()
-            log.info(f'setting up "steps_per_epoch"... iterations for current task (generated samples): {self.train_steps},')
-            log.info(f'\tadded generated data for deletion task t{task} to the replay_sampler...')
+        cur_xs, cur_ys = current_data
+        
+        self.sampler.add_subtask(xs=cur_xs, ys=cur_ys)
+        self.sampler.set_proportions([1.])
+        
+        if self.ml_paradigm == 'supervised':
+            _, self.class_freq = self.calc_class_freq(total_classes=self.DAll, targets=cur_ys, mode='ds')
+            self.adaptor.set_class_freq(class_freq = self.class_freq)
+        else: self.class_freq = None
+        
+        self.train_steps = self.get_task_iters()
+        log.info(f'setting up "steps_per_epoch"... iterations for current task (generated samples): {self.train_steps},')
+        log.info(f'\tadded generated data for deletion task t{task} to the replay_sampler...')
+        
+        print("HI")
 
 
     def before_task(self, task, **kwargs):
@@ -136,7 +138,49 @@ class Experiment_Sequential(Experiment_Replay):
 
     def after_task(self, task, **kwargs):
         super().after_task(task, **kwargs)
+        if self.model_type == 'cnn':
+            self.visualize_filters(32, 1)
         
+    
+    def visualize_filters(self, n_filters, layer_idx):
+        """ Visualize first N filters of i-th conv-layer (credits to MrNouman). """
+        filters, _ = self.model.layers[layer_idx].get_weights()
+        filter_min, filter_max = filters.min(), filters.max()
+        filters = (filters - filter_min) / (filter_max - filter_min) # normalize [0,1]
+        ix = 1
+        for i in range(n_filters):
+            f = filters[:, :, :, i]
+            for j in range(self.c):
+                ax = plt.subplot(n_filters, self.c, ix)
+                ax.set_xticks([])
+                ax.set_yticks([])
+                plt.imshow(f[:, :, j])
+                ix += 1
+        plt.show()
+
+
+    def visualize_fmaps(self, base_model, block_indices):
+        """ Visualize feature maps derived from conv-blocks (credits to MrNouman).
+            Arguments need to be integers of last conv-layer per visualized block.
+        """
+        outputs = [base_model.layers[i].output for i in block_indices]
+    
+        rnd_img = self.raw_tr_xs[np.random.randint(0, self.raw_tr_xs.shape[0])]
+        rnd_img = np.expand_dims(rnd_img, axis=0) # reshape to (1,H,W,C)
+
+        feature_maps = self.model.predict(rnd_img)
+
+        sqr = 8
+        for fmap in feature_maps:
+            ix = 1
+            for _ in range(sqr):
+                for _ in range(sqr):
+                    ax = plt.subplot(sqr, sqr, ix)
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+                    plt.imshow(fmap[0, :, :, ix-1]) #cmap='gray'
+                    ix += 1
+            plt.show()
     
 if __name__ == '__main__':
     Experiment_Sequential().run_experiment()

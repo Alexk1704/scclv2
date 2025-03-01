@@ -4,15 +4,15 @@ EXP_ID="sequential"
 SAVE_DIR="${BASE}/exp-results/${EXP_ID}"
 DATA_DIR="${BASE}/custom_datasets/"
 AR_MOD="cl_replay.architecture.ar"
-# export INVOCATION="singularity exec --nv  ${BASE}/ubuntu24tf217.sif"
-export INVOCATION=""
+export INVOCATION="singularity exec --nv  ${BASE}/ubuntu24tf217.sif"
+# export INVOCATION=""
 ${INVOCATION} python3 -m cl_replay.architecture.rehearsal.experiment.Experiment_Sequential \
 --exp_id                        ${EXP_ID}                       \
 --log_level                     DEBUG                           \
 --random_seed                   42                              \
 --wandb_active                  no                              \
 --dataset_dir                   "${DATA_DIR}"                   \
---dataset_name                  cifar10-50-ex.npz               \
+--dataset_name                  fruits.npz                      \
 --dataset_load                  from_npz                        \
 --renormalize01                 yes                             \
 --np_shuffle                    yes                             \
@@ -29,10 +29,10 @@ ${INVOCATION} python3 -m cl_replay.architecture.rehearsal.experiment.Experiment_
 --test_method                   eval                            \
 --full_eval                     yes                             \
 --single_class_test             no                              \
---model_type                    dnn                             \
+--model_type                    cnn                             \
 --num_layers                    4                               \
 --num_units                     800                             \
---add_dropout                   yes                             \
+--add_dropout                   no                              \
 --dropout_rate                  0.3                             \
 --freeze_n_layers               2                               \
 --opt                           sgd                             \
