@@ -1,5 +1,5 @@
 BASE=$HOME
-export PYTHONPATH=$PYTHONPATH:${BASE}/git/scclv2/src
+export PYTHONPATH=$PYTHONPATH:${BASE}/scclv2/src
 EXP_ID="dgr-wgangp-mnist-replay"
 SAVE_DIR="${BASE}/exp-results/${EXP_ID}"
 DATA_DIR="${BASE}/custom_datasets"

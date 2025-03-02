@@ -1,5 +1,5 @@
 BASE=$HOME
-export PYTHONPATH=$PYTHONPATH:${BASE}/git/scclv2/src
+export PYTHONPATH=$PYTHONPATH:${BASE}/scclv2/src
 EXP_ID="ar-forg-vargen-visualized"
 SAVE_DIR="${BASE}/exp-results/${EXP_ID}"
 DATA_DIR="${BASE}/custom_datasets/"
@@ -102,7 +102,7 @@ ${INVOCATION} python3 -m cl_replay.architecture.ar.experiment.Experiment_RTS \
 --L3_wait_target            L2                              \
 --L3_wait_threshold         100.                            \
 --L3_input_layer            2                               ;
-${INVOCATION} python3 "${BASE}/git/scclv2/src/cl_replay/api/utils/plot/vis_protos.py" \
+${INVOCATION} python3 "${BASE}/scclv2/src/cl_replay/api/utils/plot/vis_protos.py" \
     --sequence_path "${SAVE_DIR}/protos/${EXP_ID}_protos_T1"            \
     --prefix "${EXP_ID}_L2_GMM_"                                        \
     --out "${SAVE_DIR}/protos/visualized/protos_T1"                     \
@@ -112,7 +112,7 @@ ${INVOCATION} python3 "${BASE}/git/scclv2/src/cl_replay/api/utils/plot/vis_proto
     --pad   " 0.1 "                                                     \
     --h_pad " 0."                                                       \
     --w_pad " -10."                                                     ;
-${INVOCATION} python3 "${BASE}/git/scclv2/src/cl_replay/api/utils/plot/vis_protos.py" \
+${INVOCATION} python3 "${BASE}/scclv2/src/cl_replay/api/utils/plot/vis_protos.py" \
     --sequence_path "${SAVE_DIR}/protos/${EXP_ID}_protos_T3"            \
     --prefix "${EXP_ID}_L2_GMM_"                                        \
     --out "${SAVE_DIR}/protos/visualized/protos_T3"                     \

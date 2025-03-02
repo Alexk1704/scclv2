@@ -1,5 +1,5 @@
 BASE=$HOME
-export PYTHONPATH=$PYTHONPATH:${BASE}/git/scclv2/src
+export PYTHONPATH=$PYTHONPATH:${BASE}/scclv2/src
 EXP_ID="sequential"
 SAVE_DIR="${BASE}/exp-results/${EXP_ID}"
 DATA_DIR="${BASE}/custom_datasets/"
@@ -9,7 +9,7 @@ export INVOCATION="singularity exec --nv  ${BASE}/ubuntu24tf217.sif"
 ${INVOCATION} python3 -m cl_replay.architecture.rehearsal.experiment.Experiment_Sequential \
 --exp_id                        ${EXP_ID}                       \
 --log_level                     DEBUG                           \
---random_seed                   42                              \
+--random_seed                   47                              \
 --wandb_active                  no                              \
 --dataset_dir                   "${DATA_DIR}"                   \
 --dataset_name                  fruits.npz                      \

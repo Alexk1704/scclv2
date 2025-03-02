@@ -4,10 +4,10 @@ import math
 import itertools
 import numpy        as np
 import tensorflow   as tf
+import matplotlib.pyplot as plt
 
 from importlib      import import_module
 from importlib.util import find_spec
-from matplotlib     import plt as plt
 
 from cl_replay.api.utils                        import log, helper
 from cl_replay.api.experiment                   import Experiment_Replay
@@ -50,14 +50,19 @@ class Experiment_Sequential(Experiment_Replay):
                 if self.add_dropout == 'yes':
                     l_ = tf.keras.layers.Dropout(rate=self.dropout_rate)(l_)
         if self.model_type == 'cnn':
-            conv_1  = tf.keras.layers.Conv2D(32, (3, 3), (2, 2), name="conv_1", padding="same", activation="relu")(model_inputs)
-            pool_1  = tf.keras.layers.MaxPool2D((2, 2))(conv_1)
-            conv_2  = tf.keras.layers.Conv2D(64, (3, 3), (2, 2), name="conv_2", padding="same", activation="relu")(pool_1)  # INFO: alternative kernel_size (3, 3)
-            pool_2  = tf.keras.layers.MaxPool2D((2, 2))(conv_2)
+            # conv_1  = tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), strides=(2, 2), name="conv_1", padding="same", activation="relu")(model_inputs)
+            # pool_1  = tf.keras.layers.MaxPool2D(pool_size=(2, 2))(conv_1)
+            # conv_2  = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), strides=(2, 2), name="conv_2", padding="same", activation="relu")(pool_1)  # INFO: alternative kernel_size (3, 3)
+            # pool_2  = tf.keras.layers.MaxPool2D(pool_size=(2, 2))(conv_2)
+            # ---------- LeNet
+            conv_1  = tf.keras.layers.Conv2D(filters=6, kernel_size=(5, 5), strides=(2, 2), name="conv_1", padding="same", activation="relu")(model_inputs)
+            pool_1  = tf.keras.layers.AveragePooling2D (pool_size=(2, 2), strides=(2, 2), padding="valid")(conv_1)
+            conv_2  = tf.keras.layers.Conv2D(filters=16, kernel_size=(5, 5), strides=(1, 1), name="conv_2", padding="valid", activation="relu")(pool_1)  # INFO: alternative kernel_size (3, 3)
+            pool_2  = tf.keras.layers.AveragePooling2D (pool_size=(2, 2), strides=(2, 2), padding="valid")(conv_2)
             flat    = tf.keras.layers.Flatten()(pool_2)
-            l_      = tf.keras.layers.Dense(512, activation="relu")(flat)
+            l_      = tf.keras.layers.Dense(120, activation="relu")(flat)
             if self.add_dropout == 'yes': l_ = tf.keras.layers.Dropout(rate=self.dropout_rate)(l_)
-            l_      = tf.keras.layers.Dense(256, activation="relu")(l_)
+            l_      = tf.keras.layers.Dense(84, activation="relu")(l_)
             if self.add_dropout == 'yes': l_ = tf.keras.layers.Dropout(rate=self.dropout_rate)(l_)
         model_outputs  = tf.keras.layers.Dense(name="prediction", units=self.num_classes, activation="softmax")(l_)
 
@@ -101,8 +106,6 @@ class Experiment_Sequential(Experiment_Replay):
         self.train_steps = self.get_task_iters()
         log.info(f'setting up "steps_per_epoch"... iterations for current task (generated samples): {self.train_steps},')
         log.info(f'\tadded generated data for deletion task t{task} to the replay_sampler...')
-        
-        print("HI")
 
 
     def before_task(self, task, **kwargs):
@@ -139,48 +142,84 @@ class Experiment_Sequential(Experiment_Replay):
     def after_task(self, task, **kwargs):
         super().after_task(task, **kwargs)
         if self.model_type == 'cnn':
-            self.visualize_filters(32, 1)
+            self.visualize_filters(n_channels=3, n_filters=6, layer_idx=1)
+            self.visualize_filters(n_channels=6, n_filters=16, layer_idx=3)
+            # ----------- get a random image
+            test_data   = self.test_sets[1][0]
+            rnd_img     = test_data[np.random.randint(0, test_data.shape[0])]
+            rnd_img     = np.expand_dims(rnd_img, axis=0)  # reshape to (1,H,W,C)
+            
+            fig, axes = plt.subplots(1, 1, figsize=(3, 3))
+            im = axes.imshow(rnd_img[0])
+            axes.set_xticks([])
+            axes.set_yticks([])
+            plt.savefig(f'{self.vis_path}/input_img.svg', 
+                        dpi=300., pad_inches=0.1, facecolor='auto', format='svg')
+            plt.close()
+            # -----------
+            self.visualize_fmaps(rnd_img, layer_idx=1, n_rows=2, n_cols=3, figsize=(9,6))  # C1 6 filter
+            self.visualize_fmaps(rnd_img, layer_idx=3, n_rows=4, n_cols=4, figsize=(6,6))  # C2 16 filter
         
     
-    def visualize_filters(self, n_filters, layer_idx):
-        """ Visualize first N filters of i-th conv-layer (credits to MrNouman). """
-        filters, _ = self.model.layers[layer_idx].get_weights()
+    def visualize_filters(self, n_channels, n_filters, layer_idx):
+        """ Visualize N CNN filters. """
+        sel_layer = self.model.layers[layer_idx]
+        filters, _ = sel_layer.get_weights()
         filter_min, filter_max = filters.min(), filters.max()
+        # kernel_height, kernel_widt, input_channels, output_channels
         filters = (filters - filter_min) / (filter_max - filter_min) # normalize [0,1]
+
+        log.debug(f'visualizing CNN filters for layer: {sel_layer.name}, filter shape: {filters.shape}.')
+        fig, axes = plt.subplots(n_channels, n_filters, figsize=(n_filters, n_channels))
+        for i in range(n_channels):
+            for j in range(n_filters):
+                f = filters[:, :, :, j] # get j-th filter
+                # always visualize 0-th channel
+                axes[i,j].imshow(f[:, :, i], cmap='gray') # visualize i-th channel
+                
+                axes[i,j].set_xticks([])
+                axes[i,j].set_yticks([])
+                axes[i,j].axis('off')
+                axes[i,j].set_aspect('equal')
+
+        # plt.tight_layout()
+        plt.subplots_adjust(wspace=0.01, hspace=0.01)
+        plt.savefig(
+            f'{self.vis_path}/L{layer_idx}_cnn-filters.svg', 
+            dpi=300, pad_inches=0.1, bbox_inches='tight', facecolor='auto', edgecolor='auto', format='svg'
+        )
+        plt.close()
+
+
+    def visualize_fmaps(self, img, layer_idx, n_rows, n_cols, figsize):
+        """ Visualize CNN feature maps."""
+        layer_name  = self.model.layers[layer_idx].name
+        layer_out   = self.model.get_layer(layer_name).output
+        sub_model   = DNN(inputs=self.model.input, outputs=layer_out, **self.flags)
+        fmap        = sub_model.predict(img)
+        print(fmap.shape)
+
         ix = 1
-        for i in range(n_filters):
-            f = filters[:, :, :, i]
-            for j in range(self.c):
-                ax = plt.subplot(n_filters, self.c, ix)
-                ax.set_xticks([])
-                ax.set_yticks([])
-                plt.imshow(f[:, :, j])
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+        for i in range(n_rows):
+            for j in range(n_cols):
+                axes[i,j].imshow(fmap[0, :, :, ix-1], cmap='gray')
+                axes[i,j].set_xticks([])
+                axes[i,j].set_yticks([])
+                axes[i,j].axis('off')
+                axes[i,j].set_aspect('equal')
                 ix += 1
-        plt.show()
+
+        # plt.tight_layout()
+        plt.subplots_adjust(wspace=0.01, hspace=0.01)
+        plt.savefig(
+            f'{self.vis_path}/L{layer_idx}_cnn-fmap.svg', 
+            dpi=300, 
+            #pad_inches=0.1,
+            bbox_inches='tight', facecolor='auto', edgecolor='auto', format='svg'
+        )
+        plt.close()
 
 
-    def visualize_fmaps(self, base_model, block_indices):
-        """ Visualize feature maps derived from conv-blocks (credits to MrNouman).
-            Arguments need to be integers of last conv-layer per visualized block.
-        """
-        outputs = [base_model.layers[i].output for i in block_indices]
-    
-        rnd_img = self.raw_tr_xs[np.random.randint(0, self.raw_tr_xs.shape[0])]
-        rnd_img = np.expand_dims(rnd_img, axis=0) # reshape to (1,H,W,C)
-
-        feature_maps = self.model.predict(rnd_img)
-
-        sqr = 8
-        for fmap in feature_maps:
-            ix = 1
-            for _ in range(sqr):
-                for _ in range(sqr):
-                    ax = plt.subplot(sqr, sqr, ix)
-                    ax.set_xticks([])
-                    ax.set_yticks([])
-                    plt.imshow(fmap[0, :, :, ix-1]) #cmap='gray'
-                    ix += 1
-            plt.show()
-    
 if __name__ == '__main__':
     Experiment_Sequential().run_experiment()
