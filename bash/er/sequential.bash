@@ -12,29 +12,32 @@ ${INVOCATION} python3 -m cl_replay.architecture.rehearsal.experiment.Experiment_
 --random_seed                   47                              \
 --wandb_active                  no                              \
 --dataset_dir                   "${DATA_DIR}"                   \
---dataset_name                  fruits.npz                      \
---dataset_load                  from_npz                        \
+--dataset_name                  mnist                           \
+--dataset_load                  tfds                            \
 --renormalize01                 yes                             \
 --np_shuffle                    yes                             \
 --data_type                     32                              \
---num_tasks                     1                               \
+--num_tasks                     2                               \
 --DAll                          0 1 2 3 4 5 6 7 8 9             \
---T1                            0 1 2 3 4 5 6 7 8 9             \
---epochs                        200                             \
+--T1                            0 1 2 3 4                       \
+--T2                            5 6 7 8 9                       \
+--epochs                        100                             \
 --batch_size                    128                             \
 --test_batch_size               128                             \
 --load_task                     0                               \
 --save_All                      yes                             \
---train_method                  fit                             \
+--train_method                  batch                           \
 --test_method                   eval                            \
 --full_eval                     yes                             \
 --single_class_test             no                              \
---model_type                    cnn                             \
---num_layers                    4                               \
---num_units                     800                             \
+--eval_during_train             yes                             \
+--eval_each_n_steps             50                              \
+--model_type                    dnn                             \
+--num_layers                    3                               \
+--num_units                     600                             \
 --add_dropout                   no                              \
 --dropout_rate                  0.3                             \
---freeze_n_layers               2                               \
+--freeze_n_layers               0                               \
 --opt                           sgd                             \
 --sgd_epsilon                   1e-3                            \
 --sgd_momentum                  0.                              \

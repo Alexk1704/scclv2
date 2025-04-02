@@ -30,7 +30,7 @@ class Log_Metrics(Callback):
         self.extra_eval         = kwargs.get('extra_eval', [])
         self.single_class_test  = kwargs.get('single_class_test', 'no')
         self.num_tasks          = kwargs.get('num_tasks', None)
-        self.forgetting_tasks   = kwargs.get('forgetting_tasks', None)
+        self.forgetting_tasks   = kwargs.get('forgetting_tasks', [])
         self.forgetting_mode    = kwargs.get('forgetting_mode', None)
         if type(self.num_tasks) is str: self.num_tasks = int(self.num_tasks)
         self.eval_during_train  = kwargs.get('eval_during_train', 'no')

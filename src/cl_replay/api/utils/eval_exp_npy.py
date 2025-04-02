@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 try:
                     unpack_archive(file)
                 except Exception as ex:
-                     print(traceback.format_exc())
+                    print(traceback.format_exc())
 
     acc_paths = []
     for file in path_to_results.iterdir():

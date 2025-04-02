@@ -125,20 +125,6 @@ class Experiment_Sequential(Experiment_Replay):
         self.feed_sampler(task, self.train_set)
 
 
-    def _test(self, task):
-        super()._test(task)
-        if self.extra_eval != []:
-            _, self.eeval_test, _, self.eeval_amount = self.dataset.get_dataset(self.extra_eval, task_info=None)
-            self.model.test_task = f'EXTRA'  # test task identifier
-            log.info(f'\t[TEST] -> {self.model.test_task}({np.unique(np.argmax(self.eeval_test[1], axis=-1))})')
-            self.model.evaluate(x=self.eeval_test[0], y=self.eeval_test[1],
-                                batch_size=self.test_batch_size,
-                                steps=(self.eeval_amount//self.test_batch_size),
-                                callbacks=self.eval_callbacks,
-                                verbose=self.verbosity,
-                                return_dict=True)
-
-
     def after_task(self, task, **kwargs):
         super().after_task(task, **kwargs)
         if self.model_type == 'cnn':
