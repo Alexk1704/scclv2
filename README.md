@@ -34,7 +34,9 @@ If you (re-)use the code in this repository for your own research, feel free to 
 }
 ```
 ```
-@TBA{krawczyk2025rts,
+@article{krawczyk2025continual,
+  title={Continual Unlearning through Memory Suppression},
+  author={Krawczyk, Alexander and Gepperth, Alexander}
 }
 ```
 **The full-text articles can be found online:**
